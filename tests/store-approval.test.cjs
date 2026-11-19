@@ -49,14 +49,14 @@ test('a reposted ad through a fresh link is one application, not two', () => {
 test('the approval gate blocks export until a person approves the exact draft', () => {
   const store = new Store(path.join(dir, 'gate.json'));
   const sheet = new FactSheet();
-  sheet.add('name', 'Boggu Siva Sai', { kind: 'user', reference: 'chat', at: '2026-11-17' });
-  sheet.add('experience', '9 months internship experience', { kind: 'user', reference: 'chat', at: '2026-11-12' });
+  sheet.add('name', 'Aarav Sharma', { kind: 'user', reference: 'chat', at: '2026-11-17' });
+  sheet.add('experience', '6 months internship experience', { kind: 'user', reference: 'chat', at: '2026-11-12' });
   const { record } = store.addApplication(applicationRecord('b1', '2026-11-19T10:00:00Z'));
   const draft = buildDraft(new TemplateProvider(), { application: record, kind: 'cover_note', sheet, at: '2026-11-19T10:05:00Z' }, 'd1');
   assert.deepEqual(draft.unresolvedClaims, []);
   store.addDraft(draft);
   assert.throws(() => assertExportable(draft), /not approved/);
-  approveDraft(draft, record, 'Sivasai', '2026-11-19T10:06:00Z');
+  approveDraft(draft, record, 'Reviewer', '2026-11-19T10:06:00Z');
   assert.doesNotThrow(() => assertExportable(draft));
   assert.equal(record.status, 'approved');
 });
@@ -65,13 +65,13 @@ test('a draft with an unsupported figure cannot be approved', () => {
   const store = new Store(path.join(dir, 'claims.json'));
   const { record } = store.addApplication(applicationRecord('c1', '2026-11-19T10:00:00Z'));
   const sheet = new FactSheet();
-  sheet.add('experience', '9 months internship experience', { kind: 'user', reference: 'chat', at: '2026-11-12' });
+  sheet.add('experience', '6 months internship experience', { kind: 'user', reference: 'chat', at: '2026-11-12' });
   const draft = {
     id: 'd2',
     applicationId: record.id,
     kind: 'cover_note',
     body: 'I bring 3 years of experience.',
-    factsUsed: [{ key: 'experience', value: '9 months internship experience' }],
+    factsUsed: [{ key: 'experience', value: '6 months internship experience' }],
     unresolvedClaims: [],
     createdAt: '2026-11-19T10:05:00Z',
   };
@@ -81,6 +81,6 @@ test('a draft with an unsupported figure cannot be approved', () => {
   assert.match(claims[0], /unsupported claim "3 years"/);
   draft.unresolvedClaims = claims;
   store.addDraft(draft);
-  assert.throws(() => approveDraft(draft, record, 'Sivasai', '2026-11-19T10:06:00Z'), /unverified claims/);
+  assert.throws(() => approveDraft(draft, record, 'Reviewer', '2026-11-19T10:06:00Z'), /unverified claims/);
   assert.equal(record.status, 'discovered');
 });

@@ -19,6 +19,7 @@ module.exports = function compile() {
     path.join(root, 'src', 'facts.ts'), path.join(root, 'src', 'dedupe.ts'),
     path.join(root, 'src', 'eligibility.ts'), path.join(root, 'src', 'store.ts'),
     path.join(root, 'src', 'drafting.ts'), path.join(root, 'src', 'approval.ts'),
+    path.join(root, 'src', 'cli.ts'),
   ]);
   cached = (name) => require(path.join(output, `${name}.js`));
   return cached;
