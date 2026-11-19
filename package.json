@@ -1,0 +1,15 @@
+{
+  "name": "job-application-assistant",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first job application drafting assistant: sourced facts, eligibility checks, duplicate tracking, approval gates. Never sends anything itself.",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test tests/*.test.cjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^5.6.0"
+  }
+}
