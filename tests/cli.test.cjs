@@ -97,3 +97,14 @@ test('history shows the application events and list orders by deadline', () => {
   assert.match(run('history', appId), /discovered[\s\S]*exported/);
   assert.ok(runFailed('history', 'app-missing'), 'unknown application must fail');
 });
+
+test('export-tracker writes csv and md files and refuses a bad format', () => {
+  const { readFileSync } = require('node:fs');
+  const csvFile = path.join(dir, 'tracker.csv');
+  const mdFile = path.join(dir, 'tracker.md');
+  assert.match(run('export-tracker', 'csv', csvFile), /wrote \d+ applications/);
+  run('export-tracker', 'md', mdFile);
+  assert.match(readFileSync(csvFile, 'utf8'), /^id,status,deadline,/);
+  assert.match(readFileSync(mdFile, 'utf8'), /^\| id \| status/);
+  assert.ok(runFailed('export-tracker', 'xlsx', csvFile));
+});

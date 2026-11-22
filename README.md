@@ -19,6 +19,7 @@ Principles:
 - `src/store.ts` - atomic JSON file store
 - `src/intake.ts` - reads a labelled text posting (`Company:`, `Title:`, `URL:`, optional `Location:`/`Mode:`, `Requires: key | description | expected`); missing fields are errors, never guessed. CLI: `add-posting-text <file.txt>`
 - `src/tracker.ts` - tracker views. `list` shows open applications by soonest stated deadline (`Deadline:` / `Apply by:` in posting text, YYYY-MM-DD), undated next, closed last; `history <appId>` shows one application's events.
+- Local export: `export-tracker <csv|md> <file>` writes the tracker (same order as `list`). CSV cells that start with = + - @ are prefixed so spreadsheets do not run them. Export is a local file only; nothing is sent anywhere.
 - `src/drafting.ts` - draft providers plus the unsupported-claim verifier
 - `src/approval.ts` - the approval gate
 - `tests/` - node:test suite (TypeScript compiled on the fly, no build artifacts)

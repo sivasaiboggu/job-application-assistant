@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { parsePostingText } from './intake';
-import { sortForTracker, formatListLine, formatHistory } from './tracker';
-import { readFileSync } from 'node:fs';
+import { sortForTracker, formatListLine, formatHistory, trackerCsv, trackerMarkdown } from './tracker';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { Store } from './store';
 import { FactSheet } from './facts';
 import { evaluateEligibility } from './eligibility';
@@ -122,6 +122,14 @@ switch (command) {
     for (const record of sortForTracker(store.applications())) console.log(formatListLine(record));
     break;
   }
+  case 'export-tracker': {
+    const format = args[0];
+    const file = args[1];
+    if ((format !== 'csv' && format !== 'md') || !file) throw new Error('usage: export-tracker <csv|md> <file>');
+    writeFileSync(file, format === 'csv' ? trackerCsv(store.applications()) : trackerMarkdown(store.applications()));
+    console.log(`wrote ${store.applications().length} applications to ${file}`);
+    break;
+  }
   case 'history': {
     const record = store.getApplication(args[0]!);
     if (!record) throw new Error(`unknown application ${args[0]}`);
@@ -138,6 +146,6 @@ switch (command) {
     break;
   }
   default:
-    console.log('commands: add-posting <file.json> | add-posting-text <file.txt> | check <appId> | draft <appId> [kind] | approve <draftId> --by <name> | export <draftId> | list | history <appId> | conflicts');
+    console.log('commands: add-posting <file.json> | add-posting-text <file.txt> | check <appId> | draft <appId> [kind] | approve <draftId> --by <name> | export <draftId> | list | history <appId> | export-tracker <csv|md> <file> | conflicts');
     process.exitCode = command ? 1 : 0;
 }

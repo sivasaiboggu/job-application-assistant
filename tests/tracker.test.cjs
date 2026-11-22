@@ -52,3 +52,38 @@ test('intake reads a stated deadline and rejects an impossible one', () => {
     assert.match(r.errors[0], /deadline/);
   }
 });
+
+const { trackerCsv, trackerMarkdown } = compile()('tracker');
+
+test('csv has a header, follows tracker order and quotes awkward cells', () => {
+  const a = app('a', 'checked', '2026-12-01', '2026-11-02T00:00:00Z');
+  a.posting.title = 'Intern, "Platform"';
+  const b = app('b', 'checked', '2026-11-20', '2026-11-03T00:00:00Z');
+  const lines = trackerCsv([a, b]).trimEnd().split('\n');
+  assert.equal(lines[0], 'id,status,deadline,company,title,location,url,updated');
+  assert.match(lines[1], /^b,checked,2026-11-20,/);
+  assert.match(lines[2], /"Intern, ""Platform"""/);
+});
+
+test('csv neutralises cells that a spreadsheet would run as formulas', () => {
+  const a = app('a', 'checked', undefined, 't');
+  a.posting.company = '=HYPERLINK("http://x.test")';
+  a.posting.title = '+1';
+  const csv = trackerCsv([a]);
+  assert.ok(!/(^|,)=/m.test(csv));
+  assert.match(csv, /"'=HYPERLINK/);
+  assert.match(csv, /,'\+1,/);
+});
+
+test('markdown table escapes pipes and keeps one row per application', () => {
+  const a = app('a', 'checked', '2026-12-01', 't');
+  a.posting.title = 'Intern | Data\nTeam';
+  const lines = trackerMarkdown([a, app('b', 'exported', undefined, 't')]).trimEnd().split('\n');
+  assert.equal(lines.length, 4);
+  assert.match(lines[2], /Intern \\\| Data Team/);
+  assert.match(lines[3], /^\| b \| exported/);
+});
+
+test('an empty tracker still exports just the header', () => {
+  assert.equal(trackerCsv([]), 'id,status,deadline,company,title,location,url,updated\n');
+});

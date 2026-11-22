@@ -30,3 +30,35 @@ export function formatHistory(record: ApplicationRecord): string {
   }
   return lines.join('\n');
 }
+
+const COLUMNS = ['id', 'status', 'deadline', 'company', 'title', 'location', 'url', 'updated'] as const;
+
+function row(record: ApplicationRecord): string[] {
+  const p = record.posting;
+  return [record.id, record.status, p.deadline ?? '', p.company, p.title, p.location ?? '', p.url, record.updatedAt];
+}
+
+// A cell that starts with = + - @ would run as a formula in a spreadsheet, so
+// it is prefixed with an apostrophe before CSV quoting.
+function csvCell(value: string): string {
+  const safe = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+  return /[",\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
+}
+
+export function trackerCsv(records: ApplicationRecord[]): string {
+  const lines = [COLUMNS.join(','), ...sortForTracker(records).map((record) => row(record).map(csvCell).join(','))];
+  return `${lines.join('\n')}\n`;
+}
+
+function mdCell(value: string): string {
+  return value.replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
+}
+
+export function trackerMarkdown(records: ApplicationRecord[]): string {
+  const lines = [
+    `| ${COLUMNS.join(' | ')} |`,
+    `| ${COLUMNS.map(() => '---').join(' | ')} |`,
+    ...sortForTracker(records).map((record) => `| ${row(record).map(mdCell).join(' | ')} |`),
+  ];
+  return `${lines.join('\n')}\n`;
+}
