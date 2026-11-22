@@ -35,6 +35,13 @@ export class TemplateProvider implements DraftingProvider {
 
 const CLAIM_PATTERN = /(\d+(?:\.\d+)?)\s*(years?|yrs?|months?|lpa|cgpa|percent|%|k\b)/gi;
 
+// True when the figure appears as a whole number in the text. A plain
+// substring test would let "2" be supported by "2027" or "7.7" by "7.73".
+function containsWholeNumber(text: string, figure: string): boolean {
+  const escaped = figure.replace(/\./g, '\\.');
+  return new RegExp(`(?<![0-9.])${escaped}(?![0-9]|\\.[0-9])`).test(text);
+}
+
 // Scans a draft for quantitative claims that no sourced fact supports. A
 // draft with unsupported claims can still be saved for review, but the
 // approval gate refuses it until each claim is resolved.
@@ -43,7 +50,7 @@ export function verifyDraft(body: string, factsUsed: { key: string; value: strin
   const unsupported: string[] = [];
   for (const match of body.matchAll(CLAIM_PATTERN)) {
     const claim = `${match[1]} ${match[2]}`.toLowerCase();
-    if (!haystack.includes(match[1]!.toLowerCase())) {
+    if (!containsWholeNumber(haystack, match[1]!)) {
       unsupported.push(`unsupported claim "${claim}" - no sourced fact carries this figure`);
     }
   }
