@@ -1,6 +1,13 @@
 import { FactSheet } from './facts';
 import { EligibilityCheck, JobPosting } from './model';
 
+// Whole-term containment: "java" must not match "javascript", nor "c" match
+// "css". Characters used inside skill names (+ # .) count as part of a term.
+function containsWholeTerm(text: string, term: string): boolean {
+  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(?<![a-z0-9+#])${escaped}(?![a-z0-9+#])`).test(text);
+}
+
 function matches(expected: string, actual: string): boolean {
   const norm = (text: string) => text.toLowerCase().replace(/\s+/g, ' ').trim();
   const left = norm(expected);
@@ -9,7 +16,7 @@ function matches(expected: string, actual: string): boolean {
   // An expected token list ("react, typescript") passes when every expected
   // token appears in the actual value.
   const expectedTokens = left.split(/[,;/]+/).map((token) => token.trim()).filter(Boolean);
-  return expectedTokens.length > 1 && expectedTokens.every((token) => right.includes(token));
+  return expectedTokens.length > 1 && expectedTokens.every((token) => containsWholeTerm(right, token));
 }
 
 // Every requirement resolves to pass, fail, or unknown. Unknown is a first

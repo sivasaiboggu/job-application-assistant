@@ -44,3 +44,28 @@ test('a contested fact yields unknown, never a guess', () => {
   assert.equal(checks[0].status, 'unknown');
   assert.match(checks[0].reason, /conflicting values/);
 });
+
+function skillStatus(expected, actual) {
+  const sheet = new FactSheet();
+  sheet.add('skills', actual, source);
+  const p = { ...posting, requirements: [{ key: 'skills', description: 'skills', expected }] };
+  return evaluateEligibility(p, sheet)[0].status;
+}
+
+test('expected skill terms match whole terms, not substrings of other words', () => {
+  assert.equal(skillStatus('java, sql', 'JavaScript, SQL'), 'fail');
+  assert.equal(skillStatus('c, python', 'CSS, Python'), 'fail');
+  assert.equal(skillStatus('react, node', 'React, Node.js'), 'pass');
+});
+
+test('terms with symbols match exactly and stay distinct from their prefixes', () => {
+  assert.equal(skillStatus('c++, python', 'C++, Python'), 'pass');
+  assert.equal(skillStatus('c, python', 'C++, Python'), 'fail');
+  assert.equal(skillStatus('c#, sql', 'C#, SQL'), 'pass');
+  assert.equal(skillStatus('node.js, sql', 'Node.js, SQL'), 'pass');
+});
+
+test('a term still matches at the start, end and next to punctuation', () => {
+  assert.equal(skillStatus('react, sql', 'react; sql.'), 'pass');
+  assert.equal(skillStatus('react, sql', '(React) and (SQL)'), 'pass');
+});
