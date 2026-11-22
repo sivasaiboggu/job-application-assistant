@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { parsePostingText } from './intake';
 import { readFileSync } from 'node:fs';
 import { Store } from './store';
 import { FactSheet } from './facts';
@@ -51,6 +52,16 @@ switch (command) {
   case 'add-posting': {
     const posting = JSON.parse(readFileSync(args[0]!, 'utf8')) as JobPosting;
     register(store, posting);
+    break;
+  }
+  case 'add-posting-text': {
+    const parsed = parsePostingText(readFileSync(args[0]!, 'utf8'), new Date().toISOString());
+    if (parsed.ok === false) {
+      for (const error of parsed.errors) console.error(`cannot register: ${error}`);
+      process.exitCode = 1;
+      break;
+    }
+    register(store, parsed.posting);
     break;
   }
   case 'check': {
@@ -122,6 +133,6 @@ switch (command) {
     break;
   }
   default:
-    console.log('commands: add-posting <file.json> | check <appId> | draft <appId> [kind] | approve <draftId> --by <name> | export <draftId> | list | conflicts');
+    console.log('commands: add-posting <file.json> | add-posting-text <file.txt> | check <appId> | draft <appId> [kind] | approve <draftId> --by <name> | export <draftId> | list | conflicts');
     process.exitCode = command ? 1 : 0;
 }

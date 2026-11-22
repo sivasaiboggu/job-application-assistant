@@ -17,6 +17,7 @@ Principles:
 - `src/eligibility.ts` - requirement checks with pass/fail/unknown
 - `src/dedupe.ts` - URL canonicalization and duplicate keys
 - `src/store.ts` - atomic JSON file store
+- `src/intake.ts` - reads a labelled text posting (`Company:`, `Title:`, `URL:`, optional `Location:`/`Mode:`, `Requires: key | description | expected`); missing fields are errors, never guessed. CLI: `add-posting-text <file.txt>`
 - `src/drafting.ts` - draft providers plus the unsupported-claim verifier
 - `src/approval.ts` - the approval gate
 - `tests/` - node:test suite (TypeScript compiled on the fly, no build artifacts)

@@ -15,7 +15,7 @@ const out = mkdtempSync(path.join(tmpdir(), 'jaa-cli-build-'));
 process.on('exit', () => rmSync(out, { recursive: true, force: true }));
 compile();
 execFileSync(process.execPath, [tsc, '--module', 'commonjs', '--target', 'es2022', '--skipLibCheck',
-  '--outDir', out, ...['model', 'facts', 'dedupe', 'eligibility', 'store', 'drafting', 'approval', 'cli']
+  '--outDir', out, ...['model', 'facts', 'dedupe', 'eligibility', 'store', 'drafting', 'approval', 'intake', 'cli']
     .map((name) => path.join(__dirname, '..', 'src', `${name}.ts`))]);
 const cli = path.join(out, 'cli.js');
 
@@ -75,4 +75,17 @@ test('end to end: register, check, draft, gate blocks export, approve, export', 
 
   const listed = run('list');
   assert.match(listed, new RegExp(`${appId} +exported`));
+});
+
+test('add-posting-text registers a labelled text posting and refuses an incomplete one', () => {
+  const good = path.join(dir, 'posting.txt');
+  writeFileSync(good, 'Company: Textco\nTitle: Backend Intern\nURL: https://textco.test/jobs/1\nRequires: graduation | graduating 2028 | may 2028\n');
+  assert.match(run('add-posting-text', good), /registered \S+/);
+
+  const bad = path.join(dir, 'bad.txt');
+  writeFileSync(bad, 'Company: Textco\n');
+  const failure = runFailed('add-posting-text', bad);
+  assert.ok(failure, 'incomplete posting must exit non-zero');
+  assert.match(String(failure.stderr), /cannot register: missing title/);
+  assert.match(String(failure.stderr), /cannot register: missing url/);
 });
