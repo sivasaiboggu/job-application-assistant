@@ -32,6 +32,7 @@ export type JobPosting = {
   title: string;
   location?: string;
   workArrangement?: string;
+  deadline?: string; // YYYY-MM-DD, only when the posting states one
   requirements: Requirement[];
   capturedAt: string;
 };

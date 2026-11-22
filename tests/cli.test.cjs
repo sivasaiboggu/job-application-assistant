@@ -15,7 +15,7 @@ const out = mkdtempSync(path.join(tmpdir(), 'jaa-cli-build-'));
 process.on('exit', () => rmSync(out, { recursive: true, force: true }));
 compile();
 execFileSync(process.execPath, [tsc, '--module', 'commonjs', '--target', 'es2022', '--skipLibCheck',
-  '--outDir', out, ...['model', 'facts', 'dedupe', 'eligibility', 'store', 'drafting', 'approval', 'intake', 'cli']
+  '--outDir', out, ...['model', 'facts', 'dedupe', 'eligibility', 'store', 'drafting', 'approval', 'intake', 'tracker', 'cli']
     .map((name) => path.join(__dirname, '..', 'src', `${name}.ts`))]);
 const cli = path.join(out, 'cli.js');
 
@@ -88,4 +88,12 @@ test('add-posting-text registers a labelled text posting and refuses an incomple
   assert.ok(failure, 'incomplete posting must exit non-zero');
   assert.match(String(failure.stderr), /cannot register: missing title/);
   assert.match(String(failure.stderr), /cannot register: missing url/);
+});
+
+test('history shows the application events and list orders by deadline', () => {
+  const lines = run('list').trim().split('\n');
+  assert.match(lines.at(-1), / exported /, 'closed applications are listed last');
+  const appId = lines.at(-1).split(' ')[0];
+  assert.match(run('history', appId), /discovered[\s\S]*exported/);
+  assert.ok(runFailed('history', 'app-missing'), 'unknown application must fail');
 });

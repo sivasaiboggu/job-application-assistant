@@ -4,7 +4,7 @@ export type IntakeResult =
   | { ok: true; posting: JobPosting }
   | { ok: false; errors: string[] };
 
-const FIELD_LABELS: Record<string, 'company' | 'title' | 'url' | 'location' | 'workArrangement'> = {
+const FIELD_LABELS: Record<string, 'company' | 'title' | 'url' | 'location' | 'workArrangement' | 'deadline'> = {
   company: 'company',
   employer: 'company',
   title: 'title',
@@ -15,6 +15,8 @@ const FIELD_LABELS: Record<string, 'company' | 'title' | 'url' | 'location' | 'w
   location: 'location',
   'work arrangement': 'workArrangement',
   mode: 'workArrangement',
+  deadline: 'deadline',
+  'apply by': 'deadline',
 };
 
 // Turns a small labelled text block into a JobPosting. It reads only what the
@@ -23,7 +25,7 @@ const FIELD_LABELS: Record<string, 'company' | 'title' | 'url' | 'location' | 'w
 // company, title or url is an error, and a requirement without a key is
 // rejected rather than invented.
 export function parsePostingText(text: string, capturedAt: string): IntakeResult {
-  const found: Partial<Record<'company' | 'title' | 'url' | 'location' | 'workArrangement', string>> = {};
+  const found: Partial<Record<'company' | 'title' | 'url' | 'location' | 'workArrangement' | 'deadline', string>> = {};
   const requirements: Requirement[] = [];
   const errors: string[] = [];
 
@@ -58,6 +60,7 @@ export function parsePostingText(text: string, capturedAt: string): IntakeResult
     if (!found[required]) errors.push(`missing ${required}`);
   }
   if (found.url && !/^https?:\/\/\S+$/i.test(found.url)) errors.push(`url is not an http(s) link: ${found.url}`);
+  if (found.deadline && !isRealDate(found.deadline)) errors.push(`deadline must be a real date as YYYY-MM-DD: ${found.deadline}`);
   if (errors.length) return { ok: false, errors };
 
   const posting: JobPosting = {
@@ -69,5 +72,12 @@ export function parsePostingText(text: string, capturedAt: string): IntakeResult
   };
   if (found.location) posting.location = found.location;
   if (found.workArrangement) posting.workArrangement = found.workArrangement;
+  if (found.deadline) posting.deadline = found.deadline;
   return { ok: true, posting };
+}
+
+function isRealDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }

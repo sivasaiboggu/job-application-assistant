@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { parsePostingText } from './intake';
+import { sortForTracker, formatListLine, formatHistory } from './tracker';
 import { readFileSync } from 'node:fs';
 import { Store } from './store';
 import { FactSheet } from './facts';
@@ -118,9 +119,13 @@ switch (command) {
     break;
   }
   case 'list': {
-    for (const record of store.applications()) {
-      console.log(`${record.id}  ${record.status.padEnd(18)} ${record.posting.company} - ${record.posting.title}`);
-    }
+    for (const record of sortForTracker(store.applications())) console.log(formatListLine(record));
+    break;
+  }
+  case 'history': {
+    const record = store.getApplication(args[0]!);
+    if (!record) throw new Error(`unknown application ${args[0]}`);
+    console.log(formatHistory(record));
     break;
   }
   case 'conflicts': {
@@ -133,6 +138,6 @@ switch (command) {
     break;
   }
   default:
-    console.log('commands: add-posting <file.json> | add-posting-text <file.txt> | check <appId> | draft <appId> [kind] | approve <draftId> --by <name> | export <draftId> | list | conflicts');
+    console.log('commands: add-posting <file.json> | add-posting-text <file.txt> | check <appId> | draft <appId> [kind] | approve <draftId> --by <name> | export <draftId> | list | history <appId> | conflicts');
     process.exitCode = command ? 1 : 0;
 }
