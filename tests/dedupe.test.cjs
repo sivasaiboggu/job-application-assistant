@@ -33,3 +33,14 @@ test('different roles at one company stay distinct', () => {
 test('normalizeText collapses punctuation and case', () => {
   assert.equal(normalizeText('  AI Engineering, Intern! '), 'ai engineering intern');
 });
+
+test('an unparseable url falls back to normalized text', () => {
+  assert.equal(canonicalizeUrl('Acme Careers Page!'), 'acme careers page');
+});
+
+test('scheme and port never reach the key', () => {
+  assert.equal(
+    canonicalizeUrl('http://example.com:8080/jobs/1'),
+    canonicalizeUrl('https://example.com/jobs/1')
+  );
+});

@@ -55,3 +55,25 @@ test('empty values and unlabelled lines are ignored', () => {
   assert.equal(r.ok, true);
   assert.equal(r.posting.location, undefined);
 });
+
+test('header aliases read as their canonical fields', () => {
+  const r = parsePostingText('Employer: Example Labs\nPosition: Frontend Intern\nLink: https://example.test/jobs/42\nWork arrangement: Remote', AT);
+  assert.equal(r.ok, true);
+  assert.equal(r.posting.company, 'Example Labs');
+  assert.equal(r.posting.title, 'Frontend Intern');
+  assert.equal(r.posting.url, 'https://example.test/jobs/42');
+  assert.equal(r.posting.workArrangement, 'Remote');
+});
+
+test('CRLF line endings parse the same as LF', () => {
+  const r = parsePostingText(GOOD.replace(/\n/g, '\r\n'), AT);
+  assert.equal(r.ok, true);
+  assert.equal(r.posting.company, 'Example Labs');
+  assert.equal(r.posting.requirements.length, 2);
+});
+
+test('a requirement with an empty expected part reads as having no expected value', () => {
+  const r = parsePostingText(`${GOOD}\nRequires: skills | Knows SQL |`, AT);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.posting.requirements.at(-1), { key: 'skills', description: 'Knows SQL' });
+});
